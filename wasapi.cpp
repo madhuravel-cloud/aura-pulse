@@ -55,3 +55,31 @@ bool AudioCapturer::Initialize(IMMDevice *pTargetDevice) {
 
   return true;
 }
+bool AudioCapturer::Start() {
+  if (!pAudioClient)
+    return false;
+  HRESULT hr = pAudioClient->Start();
+  return SUCCEEDED(hr);
+}
+
+void AudioCapturer::Stop() {
+  if (pAudioClient) {
+    pAudioClient->Stop();
+  }
+}
+
+AudioCapturer::~AudioCapturer() {
+  Stop();
+  if (pCaptureClient) {
+    pCaptureClient->Release();
+    pCaptureClient = nullptr;
+  }
+  if (pAudioClient) {
+    pAudioClient->Release();
+    pAudioClient = nullptr;
+  }
+  if (pwfx) {
+    CoTaskMemFree(pwfx);
+    pwfx = nullptr;
+  }
+}
