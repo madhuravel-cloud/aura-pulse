@@ -1,73 +1,5 @@
 #include "wasapi.h"
 
-bool AudioCapturer::Initialize(IMMDevice *pTargetDevice) {
-  if (!pTargetDevice)
-    return false;
-
-  // 1. Activate the IAudioClient interface on the target playback device
-  HRESULT hr = pTargetDevice->Activate(__uuidof(IAudioClient), CLSCTX_ALL, NULL,
-                                       (void **)&pAudioClient);
-  if (FAILED(hr) || !pAudioClient) {
-    return false;
-  }
-
-  // 2. Query the exact audio format the Windows mixer is running at
-  hr = pAudioClient->GetMixFormat(&pwfx);
-  if (FAILED(hr) || !pwfx) {
-    pAudioClient->Release();
-    pAudioClient = nullptr;
-    return false;
-  }
-
-  // 3. Initialize the audio client in Shared Loopback mode
-  REFERENCE_TIME hnsRequestedDuration = 10000000;
-  hr = pAudioClient->Initialize(AUDCLNT_SHAREMODE_SHARED,
-                                AUDCLNT_STREAMFLAGS_LOOPBACK,
-                                hnsRequestedDuration, 0, pwfx, NULL);
-  if (FAILED(hr)) {
-    CoTaskMemFree(pwfx);
-    pwfx = nullptr;
-    pAudioClient->Release();
-    pAudioClient = nullptr;
-    return false;
-  }
-
-  // 4. Retrieve the actual allocated buffer size in frames
-  hr = pAudioClient->GetBufferSize(&bufferFrameCount);
-  if (FAILED(hr)) {
-    CoTaskMemFree(pwfx);
-    pwfx = nullptr;
-    pAudioClient->Release();
-    pAudioClient = nullptr;
-    return false;
-  }
-
-  // 5. Grab the IAudioCaptureClient service to read incoming loopback packets
-  hr = pAudioClient->GetService(__uuidof(IAudioCaptureClient),
-                                (void **)&pCaptureClient);
-  if (FAILED(hr) || !pCaptureClient) {
-    CoTaskMemFree(pwfx);
-    pwfx = nullptr;
-    pAudioClient->Release();
-    pAudioClient = nullptr;
-    return false;
-  }
-
-  return true;
-}
-bool AudioCapturer::Start() {
-  if (!pAudioClient)
-    return false;
-  HRESULT hr = pAudioClient->Start();
-  return SUCCEEDED(hr);
-}
-
-void AudioCapturer::Stop() {
-  if (pAudioClient) {
-    pAudioClient->Stop();
-  }
-}
-
 AudioCapturer::~AudioCapturer() {
   Stop();
   if (pCaptureClient) {
@@ -82,4 +14,84 @@ AudioCapturer::~AudioCapturer() {
     CoTaskMemFree(pwfx);
     pwfx = nullptr;
   }
+}
+
+bool AudioCapturer::Initialize(IMMDevice *pDevice) {
+  if (!pDevice)
+    return false;
+
+  HRESULT hr = pDevice->Activate(__uuidof(IAudioClient), CLSCTX_ALL, nullptr,
+                                 (void **)&pAudioClient);
+  if (FAILED(hr))
+    return false;
+
+  hr = pAudioClient->GetMixFormat(&pwfx);
+  if (FAILED(hr))
+    return false;
+
+  REFERENCE_TIME hnsRequestedDuration = 1000000; // 100ms buffer
+  hr = pAudioClient->Initialize(AUDCLNT_SHAREMODE_SHARED,
+                                AUDCLNT_STREAMFLAGS_LOOPBACK,
+                                hnsRequestedDuration, 0, pwfx, nullptr);
+  if (FAILED(hr))
+    return false;
+
+  hr = pAudioClient->GetService(__uuidof(IAudioCaptureClient),
+                                (void **)&pCaptureClient);
+  return SUCCEEDED(hr);
+}
+
+bool AudioCapturer::Start() {
+  if (!pAudioClient)
+    return false;
+  return SUCCEEDED(pAudioClient->Start());
+}
+
+void AudioCapturer::Stop() {
+  if (pAudioClient) {
+    pAudioClient->Stop();
+  }
+}
+
+bool AudioCapturer::ReadPackets(
+    const std::function<void(const BYTE *, size_t)> &onPacket) {
+  if (!pCaptureClient || !pwfx)
+    return false;
+
+  UINT32 packetLength = 0;
+  HRESULT hr = pCaptureClient->GetNextPacketSize(&packetLength);
+  if (FAILED(hr))
+    return false;
+
+  while (packetLength != 0) {
+    BYTE *pData = nullptr;
+    UINT32 numFramesAvailable = 0;
+    DWORD flags = 0;
+
+    hr = pCaptureClient->GetBuffer(&pData, &numFramesAvailable, &flags, nullptr,
+                                   nullptr);
+    if (FAILED(hr))
+      return false;
+
+    size_t bytesToRead = numFramesAvailable * pwfx->nBlockAlign;
+
+    if (onPacket) {
+      if (flags & AUDCLNT_BUFFERFLAGS_SILENT) {
+        onPacket(nullptr,
+                 bytesToRead); // RingBuffer::Write(nullptr, ...) fills zeros
+      } else {
+        onPacket(pData, bytesToRead);
+      }
+    }
+
+    hr = pCaptureClient->ReleaseBuffer(numFramesAvailable);
+    if (FAILED(hr))
+      return false;
+
+    hr = pCaptureClient->GetNextPacketSize(&packetLength);
+    if (FAILED(hr))
+      return false;
+  }
+
+  return true;
 }

@@ -1,7 +1,8 @@
 #include "AudioRenderer.h"
 #include "BufferTransfer.h"
+#include <cstring>
+#include <iostream>
 
-// Cleans up COM interfaces and format memory when the renderer is destroyed
 AudioRenderer::~AudioRenderer() {
   Stop();
   if (pRenderClient) {
@@ -18,29 +19,34 @@ AudioRenderer::~AudioRenderer() {
   }
 }
 
-// Initializes WASAPI in shared playback mode on the chosen headphone device
-bool AudioRenderer::Initialize(IMMDevice *pDevice) {
-  if (!pDevice)
+bool AudioRenderer::Initialize(IMMDevice *pDevice,
+                               const WAVEFORMATEX *captureFormat) {
+  if (!pDevice || !captureFormat)
     return false;
 
   HRESULT hr = pDevice->Activate(__uuidof(IAudioClient), CLSCTX_ALL, nullptr,
                                  (void **)&pAudioClient);
-  if (FAILED(hr))
+  if (FAILED(hr)) {
+    std::cout << "Activate failed: 0x" << std::hex << hr << std::dec << "\n";
     return false;
+  }
 
-  hr = pAudioClient->GetMixFormat(&pwfx);
-  if (FAILED(hr))
+  size_t formatSize = sizeof(WAVEFORMATEX) + captureFormat->cbSize;
+  pwfx = (WAVEFORMATEX *)CoTaskMemAlloc(formatSize);
+  if (!pwfx)
     return false;
+  std::memcpy(pwfx, captureFormat, formatSize);
 
-  // 100ms buffer duration in 100-nanosecond units (10,000,000 = 1 second)
-  REFERENCE_TIME hnsRequestedDuration = 1000000;
+  REFERENCE_TIME hnsRequestedDuration = 1000000; // 100ms buffer
+  DWORD flags = AUDCLNT_STREAMFLAGS_AUTOCONVERTPCM |
+                AUDCLNT_STREAMFLAGS_SRC_DEFAULT_QUALITY;
 
-  // Note: Flags = 0 (standard playback mode, unlike Loopback mode in
-  // AudioCapturer)
-  hr = pAudioClient->Initialize(AUDCLNT_SHAREMODE_SHARED, 0,
+  hr = pAudioClient->Initialize(AUDCLNT_SHAREMODE_SHARED, flags,
                                 hnsRequestedDuration, 0, pwfx, nullptr);
-  if (FAILED(hr))
+  if (FAILED(hr)) {
+    std::cout << "Initialize failed: 0x" << std::hex << hr << std::dec << "\n";
     return false;
+  }
 
   hr = pAudioClient->GetBufferSize(&bufferFrameCount);
   if (FAILED(hr))
@@ -48,55 +54,47 @@ bool AudioRenderer::Initialize(IMMDevice *pDevice) {
 
   hr = pAudioClient->GetService(__uuidof(IAudioRenderClient),
                                 (void **)&pRenderClient);
-  return SUCCEEDED(hr);
+  if (FAILED(hr)) {
+    std::cout << "GetService failed: 0x" << std::hex << hr << std::dec << "\n";
+    return false;
+  }
+
+  return true;
 }
 
-// Tells Windows to start pulling audio from the playback buffer to the
-// headphones
 bool AudioRenderer::Start() {
   if (!pAudioClient)
     return false;
   return SUCCEEDED(pAudioClient->Start());
 }
 
-// Pauses/stops the playback stream
 void AudioRenderer::Stop() {
   if (pAudioClient) {
     pAudioClient->Stop();
   }
 }
 
-// Checks free space in the headphone's buffer, gets 'dest', fills it via
-// TransferToDest, and releases it
 bool AudioRenderer::RenderFromBuffer(RingBuffer &ringBuffer) {
   if (!pAudioClient || !pRenderClient || !pwfx)
     return false;
 
-  // 1. Check how many frames are still sitting unplayed in the headphone's
-  // buffer
   UINT32 paddingFrames = 0;
   HRESULT hr = pAudioClient->GetCurrentPadding(&paddingFrames);
   if (FAILED(hr))
     return false;
 
-  // 2. Subtract unplayed frames from total buffer size to find empty frames
-  // ready to fill
   UINT32 availableFrames = bufferFrameCount - paddingFrames;
   if (availableFrames == 0)
-    return true; // Buffer is currently full, nothing to write right now
+    return true;
 
-  // 3. Ask Windows for the raw memory pointer ('dest') to those empty frames
-  BYTE *pData = nullptr;
-  hr = pRenderClient->GetBuffer(availableFrames, &pData);
+  BYTE *dest = nullptr;
+  hr = pRenderClient->GetBuffer(availableFrames, &dest);
   if (FAILED(hr))
     return false;
 
-  // 4. Convert frames to bytes and run our BufferTransfer function into pData
-  // ('dest')
   size_t bytesNeeded = availableFrames * pwfx->nBlockAlign;
-  TransferToDest(ringBuffer, pData, bytesNeeded);
+  TransferToDest(ringBuffer, dest, bytesNeeded);
 
-  // 5. Hand the filled buffer back to Windows so it transmits it over Bluetooth
   hr = pRenderClient->ReleaseBuffer(availableFrames, 0);
   return SUCCEEDED(hr);
 }
