@@ -1,0 +1,7 @@
+# Compiled object files and binaries
+*.obj
+*.exe
+*.pdb
+*.lib
+*.dll
+build/
