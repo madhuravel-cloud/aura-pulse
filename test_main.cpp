@@ -1,80 +1,45 @@
-#include "wasapi.h"
-#include <chrono>
+#include "BufferTransfer.h"
+#include "RingBuffer.h"
 #include <iostream>
-#include <thread>
-
-#pragma comment(lib, "ole32.lib")
-#pragma comment(lib, "uuid.lib")
+#include <vector>
 
 int main() {
-  HRESULT hr = CoInitializeEx(NULL, COINIT_MULTITHREADED);
-  if (FAILED(hr)) {
-    std::cout << "COM init failed\n";
-    return 1;
+  // 1. Create a tiny 10-byte RingBuffer so we force wrap-around math quickly
+  RingBuffer rb(10);
+
+  // Push 8 bytes: [1, 2, 3, 4, 5, 6, 7, 8]
+  BYTE firstBatch[8] = {1, 2, 3, 4, 5, 6, 7, 8};
+  rb.Write(firstBatch, 8);
+  std::cout << "After writing 8 bytes -> AvailableToRead: "
+            << rb.AvailableToRead() << ", Free: " << rb.AvailableToWrite()
+            << "\n";
+
+  // Read 6 bytes out -> readPos moves to index 6 (leaving [7, 8] inside)
+  BYTE out1[6] = {0};
+  rb.Read(out1, 6);
+  std::cout << "Read 6 bytes -> Remaining in buffer: " << rb.AvailableToRead()
+            << "\n";
+
+  // 2. Now write 5 bytes: [9, 10, 11, 12, 13]
+  // Slots 8 and 9 take [9, 10], then it wraps around to slots 0, 1, 2 for [11,
+  // 12, 13]!
+  BYTE secondBatch[5] = {9, 10, 11, 12, 13};
+  size_t written = rb.Write(secondBatch, 5);
+  std::cout << "Wrapped write of 5 bytes -> Actually written: " << written
+            << ", AvailableToRead: " << rb.AvailableToRead() << "\n";
+
+  // 3. Test BufferTransfer with underrun padding:
+  // Buffer has 7 bytes ([7, 8, 9, 10, 11, 12, 13]), but we ask for 10 bytes.
+  // The last 3 bytes in 'dest' should automatically become 0 (silence).
+  BYTE dest[10] = {99, 99, 99, 99, 99, 99, 99, 99, 99, 99};
+  size_t realAudioBytes = TransferToDest(rb, dest, 10);
+
+  std::cout << "\nTransferToDest pulled " << realAudioBytes
+            << " real bytes. Contents of dest:\n";
+  for (int i = 0; i < 10; ++i) {
+    std::cout << (int)dest[i] << " ";
   }
+  std::cout << "\n";
 
-  IMMDeviceEnumerator *pEnumerator = nullptr;
-  hr = CoCreateInstance(__uuidof(MMDeviceEnumerator), NULL, CLSCTX_ALL,
-                        __uuidof(IMMDeviceEnumerator), (void **)&pEnumerator);
-
-  IMMDevice *pDefaultDevice = nullptr;
-  if (SUCCEEDED(hr) && pEnumerator) {
-    pEnumerator->GetDefaultAudioEndpoint(eRender, eConsole, &pDefaultDevice);
-  }
-
-  AudioCapturer capturer;
-  if (!capturer.Initialize(pDefaultDevice)) {
-    std::cout << "AudioCapturer Initialize failed.\n";
-    return 1;
-  }
-
-  if (!capturer.Start()) {
-    std::cout << "AudioCapturer Start failed.\n";
-    return 1;
-  }
-
-  std::cout << "Capturing loopback audio for 2 seconds... (Play a video/song "
-               "to see active bytes!)\n\n";
-
-  size_t totalBytesCaptured = 0;
-  size_t packetCount = 0;
-
-  // Poll every 10ms for 200 iterations (~2 seconds)
-  for (int i = 0; i < 200; ++i) {
-    bool ok = capturer.ReadPackets([&](const BYTE *pData, size_t byteSize) {
-      packetCount++;
-      totalBytesCaptured += byteSize;
-
-      // Print every 25th packet so we don't flood the console
-      if (packetCount % 25 == 0) {
-        if (pData == nullptr) {
-          std::cout << "[Packet " << packetCount << "] " << byteSize
-                    << " bytes (SILENT)\n";
-        } else {
-          // Cast to float* to peek at the very first audio sample
-          const float *samples = reinterpret_cast<const float *>(pData);
-          std::cout << "[Packet " << packetCount << "] " << byteSize
-                    << " bytes | First sample: " << samples[0] << "\n";
-        }
-      }
-    });
-
-    if (!ok) {
-      std::cout << "ReadPackets encountered an error!\n";
-      break;
-    }
-
-    std::this_thread::sleep_for(std::chrono::milliseconds(10));
-  }
-
-  capturer.Stop();
-  std::cout << "\nDone! Captured " << packetCount << " packets ("
-            << totalBytesCaptured << " total bytes).\n";
-
-  if (pDefaultDevice)
-    pDefaultDevice->Release();
-  if (pEnumerator)
-    pEnumerator->Release();
-  CoUninitialize();
   return 0;
 }
