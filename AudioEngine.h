@@ -1,0 +1,68 @@
+#pragma once
+#include "AudioRenderer.h"
+#include "RingBuffer.h"
+#include "wasapi.h"
+#include <atomic>
+#include <memory>
+#include <mmdeviceapi.h>
+#include <string>
+#include <thread>
+#include <vector>
+#include <windows.h>
+
+
+struct AudioDeviceInfo {
+  std::wstring id;
+  std::wstring name;
+  bool isDefault = false;
+};
+
+struct StreamStatus {
+  std::wstring id;
+  std::wstring name;
+  bool active = false;
+  std::string statusMessage;
+};
+
+class AudioEngine {
+private:
+  struct OutputStream {
+    std::wstring id;
+    std::wstring name;
+    IMMDevice *pDevice = nullptr;
+    std::unique_ptr<RingBuffer> ringBuffer;
+    std::unique_ptr<AudioRenderer> renderer;
+    std::thread renderThread;
+    std::atomic<bool> active{false};
+
+    ~OutputStream();
+  };
+
+  std::atomic<bool> isRunning{false};
+  IMMDevice *pCaptureDevice = nullptr;
+  WAVEFORMATEX *captureFormat = nullptr;
+
+  std::unique_ptr<AudioCapturer> capturer;
+  std::vector<std::unique_ptr<OutputStream>> outputs;
+  std::thread captureThread;
+
+  IMMDevice *FindDeviceById(IMMDeviceEnumerator *pEnumerator,
+                            const std::wstring &targetId);
+
+public:
+  AudioEngine() = default;
+  ~AudioEngine();
+
+  // Lists all active playback endpoints and flags the current Windows default
+  std::vector<AudioDeviceInfo> GetOutputDevices();
+
+  // Starts loopback capture and spawns dedicated render threads for each target
+  // device ID
+  std::vector<StreamStatus>
+  Start(const std::vector<std::wstring> &targetDeviceIds);
+
+  // Stops all capture/render threads and releases WASAPI resources cleanly
+  void Stop();
+
+  bool IsRunning() const { return isRunning.load(); }
+};
