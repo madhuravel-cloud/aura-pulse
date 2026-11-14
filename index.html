@@ -1017,8 +1017,6 @@
       let streamStatuses = new Map();
       let running = false;
 
-      const hasNativeBridge = typeof window.auraAPI !== 'undefined';
-
       // Cursor-tracking spotlight for info cards
       document.querySelectorAll('.spotlight-card').forEach(card => {
         card.addEventListener('mousemove', (e) => {
@@ -1028,7 +1026,7 @@
         });
       });
 
-      // Instant view switching (Page 1 <-> Page 2)
+      // View switching (Page 1 <-> Page 2)
       goRouterBtn.addEventListener('click', () => {
         welcomeView.classList.remove('active');
         routerView.classList.add('active');
@@ -1042,49 +1040,51 @@
       });
 
       // Developer Modal controls
-      openDevBtn.addEventListener('click', () => {
-        devModal.classList.add('open');
-      });
-
-      closeDevBtn.addEventListener('click', () => {
-        devModal.classList.remove('open');
-      });
-
+      openDevBtn.addEventListener('click', () => devModal.classList.add('open'));
+      closeDevBtn.addEventListener('click', () => devModal.classList.remove('open'));
       devModal.addEventListener('click', (e) => {
-        if (e.target === devModal) {
-          devModal.classList.remove('open');
-        }
+        if (e.target === devModal) devModal.classList.remove('open');
       });
 
-      // Load output endpoints
+      // Fetch real Windows WASAPI endpoints from C++ AudioEngine
       async function loadDevices() {
-        if (hasNativeBridge) {
+        try {
+          if (!window.auraAPI) {
+            throw new Error('Native Electron bridge (window.auraAPI) is not loaded. Launch via "npm start".');
+          }
+
           allDevices = await window.auraAPI.getOutputDevices();
-        } else {
-          allDevices = [
-            { id: 'mock-spk', name: 'Speakers (Senary Audio)', isDefault: true },
-            { id: 'mock-bt1', name: 'Headphones (Rockerz 480)', isDefault: false },
-            { id: 'mock-bt2', name: 'Headphones (ZEB-THUNDER)', isDefault: false }
-          ];
+
+          const defaultDev = allDevices.find(d => d.isDefault);
+          sourceDeviceName.textContent = defaultDev
+            ? defaultDev.name
+            : 'No active default playback device found';
+
+          // Remove stale selections
+          for (const id of [...selectedIds]) {
+            const match = allDevices.find(d => d.id === id);
+            if (!match || match.isDefault) selectedIds.delete(id);
+          }
+
+          renderDevices();
+        } catch (err) {
+          sourceDeviceName.textContent = 'Engine disconnected';
+          deviceListEl.innerHTML = '';
+          statusText.textContent = err.message;
         }
-
-        const defaultDev = allDevices.find(d => d.isDefault);
-        sourceDeviceName.textContent = defaultDev
-          ? defaultDev.name
-          : 'No active default playback device found';
-
-        for (const id of [...selectedIds]) {
-          const match = allDevices.find(d => d.id === id);
-          if (!match || match.isDefault) selectedIds.delete(id);
-        }
-
-        renderDevices();
       }
 
       function renderDevices() {
         const targets = allDevices.filter(d => !d.isDefault);
         selectedCountEl.textContent = `${selectedIds.size} selected`;
         deviceListEl.innerHTML = '';
+
+        if (targets.length === 0) {
+          const empty = document.createElement('div');
+          empty.style.cssText = 'text-align:center; padding:28px; color:#cbd5e1; font-size:13.5px; background:rgba(12,15,28,0.65); border:1px dashed rgba(255,255,255,0.2); border-radius:14px;';
+          empty.textContent = 'No secondary audio endpoints detected. Connect headphones in Windows and click Refresh.';
+          deviceListEl.appendChild(empty);
+        }
 
         targets.forEach(dev => {
           const isChecked = selectedIds.has(dev.id);
@@ -1140,12 +1140,13 @@
         backGuideBtn.disabled = running;
       }
 
+      // Start / Stop live C++ WASAPI streaming
       toggleBtn.addEventListener('click', async () => {
-        if (!running) {
-          const idsToStart = [...selectedIds];
-          streamStatuses.clear();
+        try {
+          if (!running) {
+            const idsToStart = [...selectedIds];
+            streamStatuses.clear();
 
-          if (hasNativeBridge) {
             const results = await window.auraAPI.start(idsToStart);
             let activeCount = 0;
 
@@ -1159,27 +1160,15 @@
               ? `Streaming live audio to ${activeCount} output endpoint(s).`
               : 'Selected endpoint(s) could not initialize — check device status badges above.';
           } else {
-            idsToStart.forEach((id, i) => {
-              streamStatuses.set(id, {
-                id,
-                active: i === 0,
-                statusMessage: i === 0
-                  ? 'UI Preview: Streaming active'
-                  : 'UI Preview: Endpoint rejected stream (single-A2DP cap)'
-              });
-            });
-            running = true;
-            statusText.textContent = 'UI Preview mode active — ready to link C++ Node-API addon.';
-          }
-        } else {
-          if (hasNativeBridge) {
             await window.auraAPI.stop();
+            running = false;
+            streamStatuses.clear();
+            statusText.textContent = 'Streaming stopped. Ready for next session.';
           }
-          running = false;
-          streamStatuses.clear();
-          statusText.textContent = 'Streaming stopped. Ready for next session.';
+          renderDevices();
+        } catch (err) {
+          statusText.textContent = `Engine error: ${err.message}`;
         }
-        renderDevices();
       });
 
       refreshBtn.addEventListener('click', loadDevices);

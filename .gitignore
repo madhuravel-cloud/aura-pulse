@@ -1,7 +1,49 @@
-# Compiled object files and binaries
-*.obj
-*.exe
-*.pdb
-*.lib
-*.dll
+# Node & Electron
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.npm/
+
+# node-gyp & C++ Native Addon Builds
 build/
+*.node
+*.obj
+*.o
+*.exe
+*.dll
+*.lib
+*.exp
+*.pdb
+*.ilk
+*.ipdb
+*.iobj
+*.tlog
+*.lastbuildstate
+
+# Visual Studio & MSVC
+.vs/
+*.sln
+*.vcxproj
+*.vcxproj.filters
+*.vcxproj.user
+*.suo
+x64/
+Release/
+Debug/
+
+# Electron Packager / Distributables
+dist/
+out/
+
+# Editor & OS Files
+.vscode/
+.clangd
+.cache/
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Environment Variables
+.env
+.env.*

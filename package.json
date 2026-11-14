@@ -1,0 +1,16 @@
+{
+    "name": "aura-pulse",
+    "version": "1.0.0",
+    "main": "main.js",
+    "scripts": {
+        "build:native": "node-gyp rebuild",
+        "start": "electron ."
+    },
+    "dependencies": {
+        "node-addon-api": "^8.9.2"
+    },
+    "devDependencies": {
+        "electron": "^33.4.11",
+        "node-gyp": "^11.5.0"
+    }
+}
