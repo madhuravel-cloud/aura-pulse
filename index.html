@@ -1,0 +1,1190 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Aura Pulse</title>
+  <style>
+    :root {
+      --glass-bg: rgba(12, 15, 28, 0.74);
+      --glass-border: rgba(255, 255, 255, 0.14);
+      --gem-blue: #4285f4;
+      --gem-purple: #9b72cb;
+      --gem-rose: #d96570;
+      --gem-cyan: #22d3ee;
+      --text-primary: #f8fafc;
+      --text-secondary: #cbd5e1;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: 'Segoe UI', system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
+    }
+
+    body {
+      background:
+        radial-gradient(circle at 15% 15%, rgba(66, 133, 244, 0.48) 0%, transparent 48%),
+        radial-gradient(circle at 85% 22%, rgba(155, 114, 203, 0.52) 0%, transparent 50%),
+        radial-gradient(circle at 50% 92%, rgba(217, 101, 112, 0.42) 0%, transparent 52%),
+        linear-gradient(135deg, #0d1326 0%, #161433 48%, #1e132c 100%);
+      background-attachment: fixed;
+      color: var(--text-primary);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 26px 24px 32px;
+      position: relative;
+      overflow-x: hidden;
+    }
+
+    .aurora-sheen {
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      z-index: 0;
+      background: radial-gradient(circle at 60% 40%, rgba(34, 211, 238, 0.14), transparent 55%);
+      animation: pulseSheen 9s ease-in-out infinite alternate;
+    }
+
+    @keyframes pulseSheen {
+      0% {
+        opacity: 0.55;
+        transform: scale(1);
+      }
+
+      100% {
+        opacity: 1;
+        transform: scale(1.06);
+      }
+    }
+
+    /* Top-right circular developer icon */
+    .dev-btn {
+      position: fixed;
+      top: 20px;
+      right: 22px;
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      background: linear-gradient(rgba(15, 19, 34, 0.88), rgba(15, 19, 34, 0.88)) padding-box,
+        linear-gradient(135deg, var(--gem-cyan), var(--gem-purple), var(--gem-rose)) border-box;
+      border: 2px solid transparent;
+      color: #ffffff;
+      font-weight: 700;
+      font-size: 12.5px;
+      letter-spacing: 0.6px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      box-shadow: 0 4px 18px rgba(0, 0, 0, 0.45);
+      transition: transform 0.2s ease, box-shadow 0.25s ease, background 0.25s ease;
+      z-index: 80;
+    }
+
+    .dev-btn:hover {
+      transform: scale(1.1);
+      background: linear-gradient(135deg, rgba(66, 133, 244, 0.42), rgba(155, 114, 203, 0.42)) padding-box,
+        linear-gradient(135deg, #67e8f9, #c084fc, #fb7185) border-box;
+      box-shadow: 0 0 24px rgba(155, 114, 203, 0.8), 0 0 42px rgba(34, 211, 238, 0.45);
+    }
+
+    /* Views */
+    .page-view {
+      position: relative;
+      z-index: 2;
+      width: 100%;
+      max-width: 700px;
+      display: none;
+      flex-direction: column;
+      gap: 18px;
+      animation: fadeSlide 0.24s ease-out;
+    }
+
+    .page-view.active {
+      display: flex;
+    }
+
+    @keyframes fadeSlide {
+      from {
+        opacity: 0;
+        transform: translateY(8px);
+      }
+
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    /* ================= PAGE 1: WELCOME ================= */
+    .hero {
+      text-align: center;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 6px 0 2px;
+    }
+
+    .pill-tag {
+      display: inline-flex;
+      align-items: center;
+      gap: 7px;
+      padding: 4px 12px;
+      border-radius: 999px;
+      font-size: 10.5px;
+      font-weight: 600;
+      letter-spacing: 1.2px;
+      text-transform: uppercase;
+      color: #e2e8f0;
+      background: rgba(255, 255, 255, 0.08);
+      border: 1px solid rgba(255, 255, 255, 0.18);
+      backdrop-filter: blur(8px);
+      margin-bottom: 12px;
+    }
+
+    .pill-spark {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: var(--gem-cyan);
+      box-shadow: 0 0 10px var(--gem-cyan);
+    }
+
+    .hero h1 {
+      font-size: 32px;
+      font-weight: 800;
+      letter-spacing: 2.2px;
+      background: linear-gradient(110deg, #ffffff 0%, #93c5fd 30%, #d8b4fe 62%, #fda4af 100%);
+      background-size: 200% auto;
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      animation: shimmerText 6s linear infinite;
+      margin-bottom: 4px;
+    }
+
+    @keyframes shimmerText {
+      0% {
+        background-position: 0% center;
+      }
+
+      100% {
+        background-position: 200% center;
+      }
+    }
+
+    .wave-inline {
+      width: 100%;
+      max-width: 340px;
+      height: 34px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-top: 2px;
+    }
+
+    .wave-svg {
+      width: 100%;
+      height: 32px;
+      overflow: visible;
+    }
+
+    .wave-bg {
+      fill: none;
+      stroke: rgba(255, 255, 255, 0.22);
+      stroke-width: 2;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+      transition: stroke 0.25s ease;
+    }
+
+    .wave-inline:hover .wave-bg {
+      stroke: rgba(255, 255, 255, 0.42);
+    }
+
+    .wave-pulse {
+      fill: none;
+      stroke: url(#geminiWave);
+      stroke-width: 2.5;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+      stroke-dasharray: 130 340;
+      animation: flowPulse 2.2s linear infinite;
+      filter: drop-shadow(0 0 6px rgba(34, 211, 238, 0.85));
+      transition: filter 0.25s ease, stroke-width 0.25s ease;
+    }
+
+    .wave-inline:hover .wave-pulse {
+      stroke-width: 3;
+      filter: drop-shadow(0 0 12px rgba(255, 255, 255, 0.95));
+    }
+
+    @keyframes flowPulse {
+      0% {
+        stroke-dashoffset: 470;
+      }
+
+      100% {
+        stroke-dashoffset: 0;
+      }
+    }
+
+    /* Light-Up Glass Cards */
+    .card {
+      position: relative;
+      background: var(--glass-bg);
+      border: 1px solid var(--glass-border);
+      border-radius: 16px;
+      padding: 20px 22px;
+      backdrop-filter: blur(18px);
+      overflow: hidden;
+      box-shadow: 0 10px 30px rgba(6, 8, 18, 0.35);
+      transition: transform 0.22s ease, border-color 0.28s ease, box-shadow 0.28s ease, background 0.28s ease;
+    }
+
+    .card::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background: radial-gradient(400px circle at var(--mouse-x, 50%) var(--mouse-y, 50%),
+          rgba(255, 255, 255, 0.14),
+          rgba(155, 114, 203, 0.15) 40%,
+          transparent 75%);
+      opacity: 0;
+      transition: opacity 0.3s ease;
+      pointer-events: none;
+    }
+
+    .card:hover {
+      transform: translateY(-2px);
+      background: rgba(18, 22, 40, 0.84);
+      border-color: rgba(147, 197, 253, 0.55);
+      box-shadow: 0 12px 36px rgba(6, 8, 18, 0.45), 0 0 28px rgba(66, 133, 244, 0.32);
+    }
+
+    .card.alt:hover {
+      border-color: rgba(253, 164, 175, 0.55);
+      box-shadow: 0 12px 36px rgba(6, 8, 18, 0.45), 0 0 28px rgba(217, 101, 112, 0.32);
+    }
+
+    .card:hover::before {
+      opacity: 1;
+    }
+
+    .card-header {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 12px;
+      position: relative;
+      z-index: 1;
+    }
+
+    .icon-badge {
+      width: 25px;
+      height: 25px;
+      border-radius: 7px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 12px;
+      font-weight: 700;
+      background: linear-gradient(135deg, rgba(66, 133, 244, 0.32), rgba(155, 114, 203, 0.32));
+      border: 1px solid rgba(147, 197, 253, 0.42);
+      color: #bfdbfe;
+    }
+
+    .card.alt .icon-badge {
+      background: linear-gradient(135deg, rgba(155, 114, 203, 0.32), rgba(217, 101, 112, 0.32));
+      border: 1px solid rgba(253, 164, 175, 0.42);
+      color: #fecdd3;
+    }
+
+    .card h2 {
+      font-size: 13.5px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      color: var(--text-primary);
+    }
+
+    .info-list {
+      position: relative;
+      z-index: 1;
+      list-style: none;
+      display: flex;
+      flex-direction: column;
+      gap: 9px;
+      font-size: 13.5px;
+      line-height: 1.56;
+      color: var(--text-secondary);
+    }
+
+    .info-list li {
+      padding-left: 18px;
+      position: relative;
+      transition: color 0.2s ease;
+    }
+
+    .card:hover .info-list li {
+      color: #f1f5f9;
+    }
+
+    .info-list li::before {
+      content: "✦";
+      position: absolute;
+      left: 0;
+      top: 1px;
+      font-size: 10px;
+      background: linear-gradient(135deg, #60a5fa, #c084fc);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .card.alt .info-list li::before {
+      background: linear-gradient(135deg, #c084fc, #fb7185);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    strong {
+      color: #ffffff;
+      font-weight: 600;
+    }
+
+    /* Vibrant CTA Buttons */
+    .primary-btn {
+      position: relative;
+      width: 100%;
+      padding: 14px 24px;
+      border: 1px solid rgba(255, 255, 255, 0.22);
+      border-radius: 14px;
+      background: linear-gradient(110deg, #3b82f6, #8b5cf6, #ec4899, #06b6d4);
+      background-size: 240% 240%;
+      color: #ffffff;
+      font-size: 15px;
+      font-weight: 700;
+      letter-spacing: 0.6px;
+      cursor: pointer;
+      overflow: hidden;
+      box-shadow: 0 8px 26px rgba(139, 92, 246, 0.42);
+      transition: transform 0.2s ease, box-shadow 0.28s ease, background-position 0.5s ease;
+    }
+
+    .primary-btn::after {
+      content: "";
+      position: absolute;
+      top: 0;
+      left: -100%;
+      width: 60%;
+      height: 100%;
+      background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.35), transparent);
+      transform: skewX(-20deg);
+      transition: left 0.55s ease;
+      pointer-events: none;
+    }
+
+    .primary-btn:hover:not(:disabled) {
+      transform: translateY(-2px);
+      background-position: right center;
+      box-shadow: 0 0 34px rgba(139, 92, 246, 0.8), 0 0 58px rgba(56, 189, 248, 0.5);
+    }
+
+    .primary-btn:hover:not(:disabled)::after {
+      left: 150%;
+    }
+
+    .primary-btn.stop {
+      background: linear-gradient(110deg, #e11d48, #be123c, #9f1239);
+      box-shadow: 0 8px 24px rgba(225, 29, 72, 0.45);
+    }
+
+    .primary-btn.stop:hover {
+      box-shadow: 0 0 32px rgba(244, 63, 94, 0.8);
+    }
+
+    .primary-btn:disabled {
+      opacity: 0.45;
+      cursor: not-allowed;
+      box-shadow: none;
+    }
+
+    /* ================= PAGE 2: ROUTER ================= */
+    .top-bar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      padding-right: 48px;
+    }
+
+    .nav-btn {
+      background: rgba(255, 255, 255, 0.08);
+      border: 1px solid rgba(255, 255, 255, 0.18);
+      color: #f1f5f9;
+      border-radius: 10px;
+      padding: 8px 14px;
+      font-size: 12.5px;
+      font-weight: 600;
+      cursor: pointer;
+      backdrop-filter: blur(10px);
+      transition: background 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease, transform 0.15s ease;
+    }
+
+    .nav-btn:hover:not(:disabled) {
+      background: rgba(155, 114, 203, 0.28);
+      border-color: rgba(147, 197, 253, 0.6);
+      box-shadow: 0 0 18px rgba(66, 133, 244, 0.4);
+      transform: translateY(-1px);
+    }
+
+    .nav-btn:disabled {
+      opacity: 0.45;
+      cursor: not-allowed;
+    }
+
+    .brand-center {
+      text-align: center;
+      flex: 1;
+    }
+
+    .brand-center h1 {
+      font-size: 22px;
+      font-weight: 800;
+      letter-spacing: 2px;
+      background: linear-gradient(110deg, #ffffff 0%, #93c5fd 35%, #d8b4fe 70%, #fda4af 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .brand-sub {
+      font-size: 11px;
+      color: #cbd5e1;
+      letter-spacing: 0.6px;
+      margin-top: 2px;
+    }
+
+    .source-card {
+      background: var(--glass-bg);
+      border: 1px solid rgba(147, 197, 253, 0.3);
+      border-radius: 14px;
+      padding: 14px 18px;
+      backdrop-filter: blur(18px);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      box-shadow: 0 8px 24px rgba(6, 8, 18, 0.32);
+    }
+
+    .source-info {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      min-width: 0;
+    }
+
+    .pulse-dot {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      background: var(--gem-cyan);
+      box-shadow: 0 0 12px var(--gem-cyan);
+      flex-shrink: 0;
+      animation: beat 1.8s ease-in-out infinite;
+    }
+
+    @keyframes beat {
+
+      0%,
+      100% {
+        transform: scale(1);
+        opacity: 0.85;
+      }
+
+      50% {
+        transform: scale(1.3);
+        opacity: 1;
+      }
+    }
+
+    .source-label {
+      font-size: 10.5px;
+      text-transform: uppercase;
+      letter-spacing: 0.9px;
+      color: #93c5fd;
+      font-weight: 700;
+    }
+
+    .source-name {
+      font-size: 14px;
+      font-weight: 600;
+      color: #ffffff;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      margin-top: 2px;
+    }
+
+    .section-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 0 4px;
+    }
+
+    .section-title {
+      font-size: 12px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      color: #e2e8f0;
+    }
+
+    .selected-count {
+      font-size: 12px;
+      color: #93c5fd;
+      font-weight: 600;
+    }
+
+    .device-list {
+      display: flex;
+      flex-direction: column;
+      gap: 11px;
+      max-height: 290px;
+      overflow-y: auto;
+      padding-right: 2px;
+    }
+
+    .device-card {
+      position: relative;
+      background: var(--glass-bg);
+      border: 1px solid var(--glass-border);
+      border-radius: 15px;
+      padding: 15px 18px;
+      backdrop-filter: blur(18px);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 14px;
+      cursor: pointer;
+      overflow: hidden;
+      transition: transform 0.2s ease, border-color 0.25s ease, box-shadow 0.25s ease, background 0.25s ease;
+    }
+
+    .device-card::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background: radial-gradient(360px circle at var(--mouse-x, 50%) var(--mouse-y, 50%),
+          rgba(255, 255, 255, 0.14),
+          rgba(155, 114, 203, 0.15) 40%,
+          transparent 75%);
+      opacity: 0;
+      transition: opacity 0.25s ease;
+      pointer-events: none;
+    }
+
+    .device-card:hover:not(.locked) {
+      transform: translateY(-2px);
+      background: rgba(18, 22, 40, 0.84);
+      border-color: rgba(147, 197, 253, 0.55);
+      box-shadow: 0 10px 28px rgba(6, 8, 18, 0.4), 0 0 24px rgba(66, 133, 244, 0.3);
+    }
+
+    .device-card:hover:not(.locked)::before {
+      opacity: 1;
+    }
+
+    .device-card.selected {
+      background: linear-gradient(135deg, rgba(66, 133, 244, 0.24), rgba(155, 114, 203, 0.24));
+      border-color: rgba(103, 232, 249, 0.65);
+      box-shadow: 0 0 24px rgba(34, 211, 238, 0.25);
+    }
+
+    .device-card.locked {
+      cursor: default;
+    }
+
+    .device-left {
+      position: relative;
+      z-index: 1;
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      min-width: 0;
+      flex: 1;
+    }
+
+    .custom-check {
+      width: 20px;
+      height: 20px;
+      border-radius: 6px;
+      border: 2px solid rgba(255, 255, 255, 0.35);
+      background: rgba(8, 10, 20, 0.6);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      transition: all 0.2s ease;
+    }
+
+    .device-card.selected .custom-check {
+      background: linear-gradient(135deg, #3b82f6, #8b5cf6);
+      border-color: #67e8f9;
+      box-shadow: 0 0 12px rgba(34, 211, 238, 0.55);
+    }
+
+    .custom-check svg {
+      width: 13px;
+      height: 13px;
+      stroke: #ffffff;
+      stroke-width: 3;
+      fill: none;
+      opacity: 0;
+      transform: scale(0.7);
+      transition: all 0.16s ease;
+    }
+
+    .device-card.selected .custom-check svg {
+      opacity: 1;
+      transform: scale(1);
+    }
+
+    .device-details {
+      min-width: 0;
+    }
+
+    .device-name {
+      font-size: 14.5px;
+      font-weight: 600;
+      color: #ffffff;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .device-meta {
+      font-size: 12px;
+      color: var(--text-secondary);
+      margin-top: 2px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .badge {
+      position: relative;
+      z-index: 1;
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 0.4px;
+      padding: 4px 10px;
+      border-radius: 999px;
+      white-space: nowrap;
+      flex-shrink: 0;
+    }
+
+    .badge.ready {
+      background: rgba(255, 255, 255, 0.08);
+      border: 1px solid rgba(255, 255, 255, 0.16);
+      color: #cbd5e1;
+    }
+
+    .badge.live {
+      background: rgba(16, 185, 129, 0.2);
+      border: 1px solid rgba(52, 211, 153, 0.55);
+      color: #6ee7b7;
+      box-shadow: 0 0 14px rgba(16, 185, 129, 0.35);
+    }
+
+    .badge.blocked {
+      background: rgba(244, 63, 94, 0.2);
+      border: 1px solid rgba(251, 113, 133, 0.55);
+      color: #fda4af;
+      box-shadow: 0 0 14px rgba(244, 63, 94, 0.3);
+    }
+
+    .status-bar {
+      background: rgba(10, 12, 22, 0.72);
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      border-radius: 12px;
+      padding: 11px 15px;
+      font-size: 12.5px;
+      color: #e2e8f0;
+      backdrop-filter: blur(12px);
+      display: flex;
+      align-items: center;
+      gap: 9px;
+    }
+
+    .status-spark {
+      color: #38bdf8;
+      font-size: 12px;
+    }
+
+    /* ================= DEVELOPER MODAL ================= */
+    .modal-backdrop {
+      position: fixed;
+      inset: 0;
+      background: rgba(7, 9, 18, 0.74);
+      backdrop-filter: blur(10px);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      z-index: 100;
+      padding: 20px;
+    }
+
+    .modal-backdrop.open {
+      display: flex;
+    }
+
+    .modal-window {
+      background: linear-gradient(rgba(16, 20, 36, 0.95), rgba(16, 20, 36, 0.95)) padding-box,
+        linear-gradient(135deg, rgba(66, 133, 244, 0.65), rgba(155, 114, 203, 0.65), rgba(217, 101, 112, 0.65)) border-box;
+      border: 1px solid transparent;
+      border-radius: 18px;
+      width: 100%;
+      max-width: 400px;
+      padding: 24px;
+      box-shadow: 0 24px 60px rgba(0, 0, 0, 0.7), 0 0 40px rgba(155, 114, 203, 0.35);
+      animation: popIn 0.18s ease-out;
+    }
+
+    @keyframes popIn {
+      from {
+        opacity: 0;
+        transform: scale(0.94);
+      }
+
+      to {
+        opacity: 1;
+        transform: scale(1);
+      }
+    }
+
+    .modal-top {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 16px;
+      padding-bottom: 12px;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    }
+
+    .modal-top h3 {
+      font-size: 13px;
+      font-weight: 700;
+      letter-spacing: 1px;
+      background: linear-gradient(90deg, #93c5fd, #d8b4fe);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .close-btn {
+      background: rgba(255, 255, 255, 0.08);
+      border: 1px solid rgba(255, 255, 255, 0.14);
+      color: #cbd5e1;
+      width: 28px;
+      height: 28px;
+      border-radius: 8px;
+      font-size: 15px;
+      cursor: pointer;
+      transition: background 0.2s, box-shadow 0.2s, color 0.2s;
+    }
+
+    .close-btn:hover {
+      background: rgba(217, 101, 112, 0.28);
+      border-color: rgba(217, 101, 112, 0.6);
+      color: #fff;
+      box-shadow: 0 0 14px rgba(217, 101, 112, 0.45);
+    }
+
+    .dev-profile {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      margin-bottom: 14px;
+    }
+
+    .dev-avatar {
+      width: 48px;
+      height: 48px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, var(--gem-blue), var(--gem-purple), var(--gem-rose));
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 800;
+      font-size: 16px;
+      color: #fff;
+      flex-shrink: 0;
+      box-shadow: 0 0 20px rgba(155, 114, 203, 0.55);
+    }
+
+    .dev-name {
+      font-size: 16px;
+      font-weight: 700;
+      color: #f8fafc;
+    }
+
+    .dev-role {
+      font-size: 12px;
+      color: #cbd5e1;
+      margin-top: 2px;
+    }
+
+    .dev-bio {
+      font-size: 13px;
+      line-height: 1.58;
+      color: #e2e8f0;
+      margin-bottom: 16px;
+    }
+
+    .dev-links {
+      display: flex;
+      flex-direction: column;
+      gap: 7px;
+      font-size: 12.5px;
+      color: #94a3b8;
+      background: rgba(8, 10, 18, 0.72);
+      padding: 12px 14px;
+      border-radius: 12px;
+      border: 1px solid rgba(255, 255, 255, 0.09);
+    }
+
+    .dev-links span {
+      color: #f8fafc;
+      font-weight: 500;
+    }
+  </style>
+</head>
+
+<body>
+
+  <div class="aurora-sheen"></div>
+
+  <!-- Top-right circular developer icon -->
+  <button type="button" class="dev-btn" id="openDevModal" title="About the Developer">MT</button>
+
+  <!-- ==================== PAGE 1: WELCOME ==================== -->
+  <section class="page-view active" id="welcomeView">
+    <div class="hero">
+      <div class="pill-tag">
+        <span class="pill-spark"></span>
+        <span>Multi-Stream WASAPI Engine</span>
+      </div>
+      <h1>WELCOME TO AURA PULSE</h1>
+      <div class="wave-inline" title="Aura Pulse Audio Engine">
+        <svg class="wave-svg" viewBox="0 0 340 32" preserveAspectRatio="none">
+          <defs>
+            <linearGradient id="geminiWave" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" stop-color="#60a5fa" />
+              <stop offset="35%" stop-color="#c084fc" />
+              <stop offset="70%" stop-color="#fb7185" />
+              <stop offset="100%" stop-color="#22d3ee" />
+            </linearGradient>
+          </defs>
+          <path class="wave-bg"
+            d="M 0 16 L 96 16 Q 104 16 108 11 T 118 16 L 134 16 L 143 3 L 153 29 L 163 2 L 173 26 L 182 10 L 190 16 L 208 16 Q 216 8 224 16 T 240 16 L 340 16" />
+          <path class="wave-pulse"
+            d="M 0 16 L 96 16 Q 104 16 108 11 T 118 16 L 134 16 L 143 3 L 153 29 L 163 2 L 173 26 L 182 10 L 190 16 L 208 16 Q 216 8 224 16 T 240 16 L 340 16" />
+        </svg>
+      </div>
+    </div>
+
+    <div class="card spotlight-card">
+      <div class="card-header">
+        <div class="icon-badge">01</div>
+        <h2>Prerequisites</h2>
+      </div>
+      <ul class="info-list">
+        <li><strong>Active System Playback Source:</strong> Keep an active default playback device (such as Laptop
+          Speakers) set in Windows so Aura Pulse can capture loopback audio cleanly.</li>
+        <li><strong>Pre-Paired Audio Endpoints:</strong> Pair and connect your target headphones or speakers in Windows
+          Bluetooth &amp; Sound settings before starting a session.</li>
+        <li><strong>Bluetooth LE Audio (LC3):</strong> Enable <em>Use LE Audio when available</em> in Windows Bluetooth
+          settings and use two LE Audio-capable headsets for dual wireless streaming over one built-in radio.</li>
+      </ul>
+    </div>
+
+    <div class="card alt spotlight-card">
+      <div class="card-header">
+        <div class="icon-badge">02</div>
+        <h2>If LE Audio Is Not Supported</h2>
+      </div>
+      <ul class="info-list">
+        <li><strong>Bluetooth + Wired / USB Hybrid:</strong> Stream simultaneously to one Classic Bluetooth headphone
+          alongside a 3.5mm wired headset, USB headset, or HDMI display speaker.</li>
+        <li><strong>USB Bluetooth Audio Transmitter:</strong> Connect a USB Bluetooth audio adapter for the second
+          headset—Windows treats it as an independent USB sound card, bypassing the single-A2DP driver cap.</li>
+        <li><strong>Hands-Free Profile Fallback:</strong> Run one headset on Stereo (A2DP) and select the second
+          headset's <em>Hands-Free AG Audio</em> endpoint for voice or lecture playback.</li>
+      </ul>
+    </div>
+
+    <button type="button" class="primary-btn" id="goRouterBtn">Launch Audio Router →</button>
+  </section>
+
+  <!-- ==================== PAGE 2: AUDIO ROUTER ==================== -->
+  <section class="page-view" id="routerView">
+    <div class="top-bar">
+      <button type="button" class="nav-btn" id="backGuideBtn">← Guide</button>
+      <div class="brand-center">
+        <h1>AURA PULSE</h1>
+        <div class="brand-sub">Live Multi-Endpoint Audio Router</div>
+      </div>
+      <button type="button" class="nav-btn" id="refreshBtn">↻ Refresh</button>
+    </div>
+
+    <div class="source-card">
+      <div class="source-info">
+        <div class="pulse-dot"></div>
+        <div>
+          <div class="source-label">System Loopback Source (Windows Default)</div>
+          <div class="source-name" id="sourceDeviceName">Detecting default playback device...</div>
+        </div>
+      </div>
+      <span class="badge live">Capture Ready</span>
+    </div>
+
+    <div class="section-row">
+      <span class="section-title">Target Output Devices</span>
+      <span class="selected-count" id="selectedCount">0 selected</span>
+    </div>
+
+    <div class="device-list" id="deviceList"></div>
+
+    <button type="button" class="primary-btn" id="toggleBtn" disabled>Start Streaming</button>
+
+    <div class="status-bar">
+      <span class="status-spark">✦</span>
+      <span id="statusText">Select one or more output devices above to mirror system audio.</span>
+    </div>
+  </section>
+
+  <!-- ==================== DEVELOPER MODAL ==================== -->
+  <div class="modal-backdrop" id="devModal">
+    <div class="modal-window">
+      <div class="modal-top">
+        <h3>ABOUT THE DEVELOPER</h3>
+        <button type="button" class="close-btn" id="closeDevModal" title="Close">×</button>
+      </div>
+      <div class="dev-profile">
+        <div class="dev-avatar">MT</div>
+        <div>
+          <div class="dev-name">Madhuravel T</div>
+          <div class="dev-role">B.Tech CSE · IIIT Kottayam (2025–2029)</div>
+        </div>
+      </div>
+      <p class="dev-bio">
+        Systems and full-stack developer building low-latency C++ Windows WASAPI audio engines, graph analytics tools,
+        and real-time desktop apps.
+      </p>
+      <div class="dev-links">
+        <div>GitHub: <span>github.com/madhuravel-cloud</span></div>
+        <div>Email: <span>madhuravel048@gmail.com</span></div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      const welcomeView = document.getElementById('welcomeView');
+      const routerView = document.getElementById('routerView');
+      const goRouterBtn = document.getElementById('goRouterBtn');
+      const backGuideBtn = document.getElementById('backGuideBtn');
+
+      const devModal = document.getElementById('devModal');
+      const openDevBtn = document.getElementById('openDevModal');
+      const closeDevBtn = document.getElementById('closeDevModal');
+
+      const sourceDeviceName = document.getElementById('sourceDeviceName');
+      const deviceListEl = document.getElementById('deviceList');
+      const selectedCountEl = document.getElementById('selectedCount');
+      const toggleBtn = document.getElementById('toggleBtn');
+      const refreshBtn = document.getElementById('refreshBtn');
+      const statusText = document.getElementById('statusText');
+
+      let allDevices = [];
+      let selectedIds = new Set();
+      let streamStatuses = new Map();
+      let running = false;
+
+      const hasNativeBridge = typeof window.auraAPI !== 'undefined';
+
+      // Cursor-tracking spotlight for info cards
+      document.querySelectorAll('.spotlight-card').forEach(card => {
+        card.addEventListener('mousemove', (e) => {
+          const rect = card.getBoundingClientRect();
+          card.style.setProperty('--mouse-x', `${e.clientX - rect.left}px`);
+          card.style.setProperty('--mouse-y', `${e.clientY - rect.top}px`);
+        });
+      });
+
+      // Instant view switching (Page 1 <-> Page 2)
+      goRouterBtn.addEventListener('click', () => {
+        welcomeView.classList.remove('active');
+        routerView.classList.add('active');
+        loadDevices();
+      });
+
+      backGuideBtn.addEventListener('click', () => {
+        if (running) return;
+        routerView.classList.remove('active');
+        welcomeView.classList.add('active');
+      });
+
+      // Developer Modal controls
+      openDevBtn.addEventListener('click', () => {
+        devModal.classList.add('open');
+      });
+
+      closeDevBtn.addEventListener('click', () => {
+        devModal.classList.remove('open');
+      });
+
+      devModal.addEventListener('click', (e) => {
+        if (e.target === devModal) {
+          devModal.classList.remove('open');
+        }
+      });
+
+      // Load output endpoints
+      async function loadDevices() {
+        if (hasNativeBridge) {
+          allDevices = await window.auraAPI.getOutputDevices();
+        } else {
+          allDevices = [
+            { id: 'mock-spk', name: 'Speakers (Senary Audio)', isDefault: true },
+            { id: 'mock-bt1', name: 'Headphones (Rockerz 480)', isDefault: false },
+            { id: 'mock-bt2', name: 'Headphones (ZEB-THUNDER)', isDefault: false }
+          ];
+        }
+
+        const defaultDev = allDevices.find(d => d.isDefault);
+        sourceDeviceName.textContent = defaultDev
+          ? defaultDev.name
+          : 'No active default playback device found';
+
+        for (const id of [...selectedIds]) {
+          const match = allDevices.find(d => d.id === id);
+          if (!match || match.isDefault) selectedIds.delete(id);
+        }
+
+        renderDevices();
+      }
+
+      function renderDevices() {
+        const targets = allDevices.filter(d => !d.isDefault);
+        selectedCountEl.textContent = `${selectedIds.size} selected`;
+        deviceListEl.innerHTML = '';
+
+        targets.forEach(dev => {
+          const isChecked = selectedIds.has(dev.id);
+          const status = streamStatuses.get(dev.id);
+
+          const card = document.createElement('div');
+          card.className = `device-card ${isChecked ? 'selected' : ''} ${running ? 'locked' : ''}`;
+
+          let badgeHtml = `<span class="badge ready">Ready</span>`;
+          let metaText = 'Click to include in multi-stream output';
+
+          if (status) {
+            badgeHtml = status.active
+              ? `<span class="badge live">Streaming</span>`
+              : `<span class="badge blocked">Blocked</span>`;
+            metaText = status.statusMessage;
+          }
+
+          card.innerHTML = `
+            <div class="device-left">
+              <div class="custom-check">
+                <svg viewBox="0 0 16 16"><polyline points="3.5 8.5 6.5 11.5 12.5 4.5"></polyline></svg>
+              </div>
+              <div class="device-details">
+                <div class="device-name" title="${dev.name}">${dev.name}</div>
+                <div class="device-meta">${metaText}</div>
+              </div>
+            </div>
+            ${badgeHtml}
+          `;
+
+          card.addEventListener('mousemove', (e) => {
+            const rect = card.getBoundingClientRect();
+            card.style.setProperty('--mouse-x', `${e.clientX - rect.left}px`);
+            card.style.setProperty('--mouse-y', `${e.clientY - rect.top}px`);
+          });
+
+          if (!running) {
+            card.addEventListener('click', () => {
+              if (selectedIds.has(dev.id)) selectedIds.delete(dev.id);
+              else selectedIds.add(dev.id);
+              renderDevices();
+            });
+          }
+
+          deviceListEl.appendChild(card);
+        });
+
+        toggleBtn.textContent = running ? 'Stop Streaming' : 'Start Streaming';
+        toggleBtn.className = running ? 'primary-btn stop' : 'primary-btn';
+        toggleBtn.disabled = !running && selectedIds.size === 0;
+        refreshBtn.disabled = running;
+        backGuideBtn.disabled = running;
+      }
+
+      toggleBtn.addEventListener('click', async () => {
+        if (!running) {
+          const idsToStart = [...selectedIds];
+          streamStatuses.clear();
+
+          if (hasNativeBridge) {
+            const results = await window.auraAPI.start(idsToStart);
+            let activeCount = 0;
+
+            results.forEach(res => {
+              streamStatuses.set(res.id, res);
+              if (res.active) activeCount++;
+            });
+
+            running = activeCount > 0;
+            statusText.textContent = running
+              ? `Streaming live audio to ${activeCount} output endpoint(s).`
+              : 'Selected endpoint(s) could not initialize — check device status badges above.';
+          } else {
+            idsToStart.forEach((id, i) => {
+              streamStatuses.set(id, {
+                id,
+                active: i === 0,
+                statusMessage: i === 0
+                  ? 'UI Preview: Streaming active'
+                  : 'UI Preview: Endpoint rejected stream (single-A2DP cap)'
+              });
+            });
+            running = true;
+            statusText.textContent = 'UI Preview mode active — ready to link C++ Node-API addon.';
+          }
+        } else {
+          if (hasNativeBridge) {
+            await window.auraAPI.stop();
+          }
+          running = false;
+          streamStatuses.clear();
+          statusText.textContent = 'Streaming stopped. Ready for next session.';
+        }
+        renderDevices();
+      });
+
+      refreshBtn.addEventListener('click', loadDevices);
+    });
+  </script>
+</body>
+
+</html>
