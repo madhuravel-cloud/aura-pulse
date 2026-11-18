@@ -97,6 +97,17 @@ IMMDevice *AudioEngine::FindDeviceById(IMMDeviceEnumerator *pEnumerator,
   return nullptr;
 }
 
+void AudioEngine::SetDeviceVolume(const std::wstring &deviceId, float volume) {
+  std::lock_guard<std::mutex> lock(volumeMutex);
+  deviceVolumes[deviceId] = volume;
+
+  for (auto &out : outputs) {
+    if (out && out->id == deviceId && out->renderer) {
+      out->renderer->SetVolume(volume);
+    }
+  }
+}
+
 std::vector<StreamStatus>
 AudioEngine::Start(const std::vector<std::wstring> &targetDeviceIds) {
   Stop(); // Ensure clean slate before starting
@@ -183,6 +194,15 @@ AudioEngine::Start(const std::vector<std::wstring> &targetDeviceIds) {
     stream->ringBuffer =
         std::make_unique<RingBuffer>(captureFormat->nAvgBytesPerSec);
     stream->renderer = std::make_unique<AudioRenderer>();
+
+    // Apply previously set volume (defaults to 1.0f)
+    {
+      std::lock_guard<std::mutex> lock(volumeMutex);
+      auto it = deviceVolumes.find(targetId);
+      if (it != deviceVolumes.end()) {
+        stream->renderer->SetVolume(it->second);
+      }
+    }
 
     if (stream->renderer->Initialize(stream->pDevice, captureFormat)) {
       stream->renderer->Start();

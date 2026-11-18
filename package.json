@@ -1,16 +1,47 @@
 {
     "name": "aura-pulse",
     "version": "1.0.0",
+    "description": "Multi-Stream Windows WASAPI Audio Router",
     "main": "main.js",
     "scripts": {
-        "build:native": "node-gyp rebuild",
-        "start": "electron ."
+        "build:native": "node-gyp rebuild --target=33.0.0 --arch=x64 --dist-url=https://electronjs.org/headers",
+        "start": "electron .",
+        "package": "electron-builder --win"
+    },
+    "build": {
+        "appId": "com.madhuravel.aurapulse",
+        "productName": "Aura Pulse",
+        "icon": "icon.png",
+        "asarUnpack": [
+            "build/Release/*.node"
+        ],
+        "files": [
+            "main.js",
+            "preload.js",
+            "index.html",
+            "intro.mp4",
+            "icon.png",
+            "build/Release/aura_engine.node"
+        ],
+        "win": {
+            "target": [
+                "nsis",
+                "portable"
+            ],
+            "icon": "icon.png"
+        },
+        "nsis": {
+            "oneClick": false,
+            "allowToChangeInstallationDirectory": true,
+            "createDesktopShortcut": true
+        }
     },
     "dependencies": {
-        "node-addon-api": "^8.9.2"
+        "node-addon-api": "^8.0.0"
     },
     "devDependencies": {
-        "electron": "^33.4.11",
-        "node-gyp": "^11.5.0"
+        "electron": "^33.0.0",
+        "electron-builder": "^25.1.8",
+        "node-gyp": "^11.0.0"
     }
 }

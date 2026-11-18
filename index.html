@@ -42,6 +42,53 @@
       overflow-x: hidden;
     }
 
+    /* Fullscreen App Intro Overlay */
+    .intro-overlay {
+      position: fixed;
+      inset: 0;
+      background: #070913;
+      z-index: 999;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: opacity 0.65s ease, visibility 0.65s ease;
+    }
+
+    .intro-overlay.fade-out {
+      opacity: 0;
+      visibility: hidden;
+      pointer-events: none;
+    }
+
+    .intro-overlay video {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+
+    .skip-intro-btn {
+      position: absolute;
+      bottom: 24px;
+      right: 26px;
+      background: rgba(12, 15, 28, 0.72);
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      color: #e2e8f0;
+      padding: 7px 14px;
+      border-radius: 999px;
+      font-size: 12px;
+      font-weight: 600;
+      letter-spacing: 0.5px;
+      cursor: pointer;
+      backdrop-filter: blur(8px);
+      transition: background 0.2s ease, border-color 0.2s ease, color 0.2s ease;
+    }
+
+    .skip-intro-btn:hover {
+      background: rgba(155, 114, 203, 0.35);
+      border-color: rgba(147, 197, 253, 0.6);
+      color: #ffffff;
+    }
+
     .aurora-sheen {
       position: fixed;
       inset: 0;
@@ -99,7 +146,7 @@
       position: relative;
       z-index: 2;
       width: 100%;
-      max-width: 700px;
+      max-width: 720px;
       display: none;
       flex-direction: column;
       gap: 18px;
@@ -678,6 +725,90 @@
       text-overflow: ellipsis;
     }
 
+    /* Per-Device Volume Button & Slider */
+    .device-controls {
+      position: relative;
+      z-index: 2;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      flex-shrink: 0;
+    }
+
+    .vol-slider-wrap {
+      display: flex;
+      align-items: center;
+      gap: 7px;
+      background: rgba(8, 10, 20, 0.58);
+      border: 1px solid rgba(255, 255, 255, 0.11);
+      padding: 4px 10px 4px 5px;
+      border-radius: 999px;
+    }
+
+    .vol-btn {
+      width: 28px;
+      height: 28px;
+      border-radius: 50%;
+      background: rgba(255, 255, 255, 0.08);
+      border: 1px solid rgba(255, 255, 255, 0.16);
+      color: #e2e8f0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+
+    .vol-btn:hover {
+      background: rgba(66, 133, 244, 0.3);
+      border-color: rgba(103, 232, 249, 0.65);
+      color: #ffffff;
+      box-shadow: 0 0 12px rgba(34, 211, 238, 0.38);
+    }
+
+    .vol-btn.muted {
+      background: rgba(244, 63, 94, 0.22);
+      border-color: rgba(251, 113, 133, 0.58);
+      color: #fda4af;
+    }
+
+    .vol-slider {
+      -webkit-appearance: none;
+      appearance: none;
+      width: 72px;
+      height: 4px;
+      border-radius: 999px;
+      background: rgba(255, 255, 255, 0.22);
+      outline: none;
+      cursor: pointer;
+    }
+
+    .vol-slider::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      appearance: none;
+      width: 13px;
+      height: 13px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, #38bdf8, #c084fc);
+      border: 1.5px solid #ffffff;
+      box-shadow: 0 0 10px rgba(56, 189, 248, 0.75);
+      cursor: pointer;
+      transition: transform 0.15s ease;
+    }
+
+    .vol-slider::-webkit-slider-thumb:hover {
+      transform: scale(1.18);
+    }
+
+    .vol-pct {
+      font-size: 11px;
+      font-weight: 700;
+      color: #cbd5e1;
+      min-width: 32px;
+      text-align: right;
+      font-variant-numeric: tabular-nums;
+    }
+
     .badge {
       position: relative;
       z-index: 1;
@@ -868,6 +999,12 @@
 
 <body>
 
+  <!-- Fullscreen Intro Video -->
+  <div class="intro-overlay" id="introOverlay">
+    <video id="introVideo" src="intro.mp4" autoplay muted playsinline></video>
+    <button type="button" class="skip-intro-btn" id="skipIntroBtn">Skip →</button>
+  </div>
+
   <div class="aurora-sheen"></div>
 
   <!-- Top-right circular developer icon -->
@@ -996,6 +1133,24 @@
 
   <script>
     document.addEventListener('DOMContentLoaded', () => {
+      // Intro video overlay handling
+      const introOverlay = document.getElementById('introOverlay');
+      const introVideo = document.getElementById('introVideo');
+      const skipIntroBtn = document.getElementById('skipIntroBtn');
+
+      function finishIntro() {
+        if (!introOverlay || introOverlay.classList.contains('fade-out')) return;
+        introOverlay.classList.add('fade-out');
+        setTimeout(() => {
+          introOverlay.remove();
+        }, 700);
+      }
+
+      introVideo.addEventListener('ended', finishIntro);
+      introVideo.addEventListener('error', finishIntro);
+      skipIntroBtn.addEventListener('click', finishIntro);
+
+      // App UI elements
       const welcomeView = document.getElementById('welcomeView');
       const routerView = document.getElementById('routerView');
       const goRouterBtn = document.getElementById('goRouterBtn');
@@ -1012,9 +1167,13 @@
       const refreshBtn = document.getElementById('refreshBtn');
       const statusText = document.getElementById('statusText');
 
+      const ICON_UNMUTED = `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon><path d="M15.54 8.46a5 5 0 0 1 0 7.07"></path><path d="M19.07 4.93a10 10 0 0 1 0 14.14"></path></svg>`;
+      const ICON_MUTED = `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon><line x1="23" y1="9" x2="17" y2="15"></line><line x1="17" y1="9" x2="23" y2="15"></line></svg>`;
+
       let allDevices = [];
       let selectedIds = new Set();
       let streamStatuses = new Map();
+      let deviceVolumes = new Map(); // id -> { vol: 0..100, muted: false, prevVol: 100 }
       let running = false;
 
       // Cursor-tracking spotlight for info cards
@@ -1026,7 +1185,7 @@
         });
       });
 
-      // View switching (Page 1 <-> Page 2)
+      // View switching
       goRouterBtn.addEventListener('click', () => {
         welcomeView.classList.remove('active');
         routerView.classList.add('active');
@@ -1060,7 +1219,6 @@
             ? defaultDev.name
             : 'No active default playback device found';
 
-          // Remove stale selections
           for (const id of [...selectedIds]) {
             const match = allDevices.find(d => d.id === id);
             if (!match || match.isDefault) selectedIds.delete(id);
@@ -1090,6 +1248,13 @@
           const isChecked = selectedIds.has(dev.id);
           const status = streamStatuses.get(dev.id);
 
+          if (!deviceVolumes.has(dev.id)) {
+            deviceVolumes.set(dev.id, { vol: 100, muted: false, prevVol: 100 });
+          }
+          const vState = deviceVolumes.get(dev.id);
+          const effectiveVol = vState.muted ? 0 : vState.vol;
+          const isMutedVisual = vState.muted || effectiveVol === 0;
+
           const card = document.createElement('div');
           card.className = `device-card ${isChecked ? 'selected' : ''} ${running ? 'locked' : ''}`;
 
@@ -1113,13 +1278,54 @@
                 <div class="device-meta">${metaText}</div>
               </div>
             </div>
-            ${badgeHtml}
+            <div class="device-controls">
+              <div class="vol-slider-wrap">
+                <button type="button" class="vol-btn ${isMutedVisual ? 'muted' : ''}" title="${isMutedVisual ? 'Unmute' : 'Mute'}">
+                  ${isMutedVisual ? ICON_MUTED : ICON_UNMUTED}
+                </button>
+                <input type="range" class="vol-slider" min="0" max="100" value="${effectiveVol}" />
+                <span class="vol-pct">${effectiveVol}%</span>
+              </div>
+              ${badgeHtml}
+            </div>
           `;
 
           card.addEventListener('mousemove', (e) => {
             const rect = card.getBoundingClientRect();
             card.style.setProperty('--mouse-x', `${e.clientX - rect.left}px`);
             card.style.setProperty('--mouse-y', `${e.clientY - rect.top}px`);
+          });
+
+          const controlsEl = card.querySelector('.device-controls');
+          const volBtn = card.querySelector('.vol-btn');
+          const volSlider = card.querySelector('.vol-slider');
+          const volPct = card.querySelector('.vol-pct');
+
+          controlsEl.addEventListener('click', (e) => e.stopPropagation());
+
+          volBtn.addEventListener('click', () => {
+            if (!vState.muted && vState.vol > 0) {
+              vState.prevVol = vState.vol;
+              vState.muted = true;
+            } else {
+              vState.muted = false;
+              vState.vol = vState.prevVol > 0 ? vState.prevVol : 100;
+            }
+            const applied = vState.muted ? 0 : vState.vol;
+            window.auraAPI?.setVolume(dev.id, applied / 100);
+            renderDevices();
+          });
+
+          volSlider.addEventListener('input', (e) => {
+            const val = Number(e.target.value);
+            vState.vol = val;
+            vState.muted = val === 0;
+            if (val > 0) vState.prevVol = val;
+
+            volPct.textContent = `${val}%`;
+            volBtn.classList.toggle('muted', vState.muted);
+            volBtn.innerHTML = vState.muted ? ICON_MUTED : ICON_UNMUTED;
+            window.auraAPI?.setVolume(dev.id, val / 100);
           });
 
           if (!running) {

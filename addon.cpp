@@ -32,8 +32,6 @@ static std::wstring Utf8ToWide(const std::string &str) {
   return result;
 }
 
-// Runs any AudioEngine call on a clean MTA thread isolated from Electron's STA
-// UI thread
 template <typename Func> auto RunOnComMtaThread(Func &&fn) -> decltype(fn()) {
   using RetType = decltype(fn());
   std::packaged_task<RetType()> task([&fn]() {
@@ -108,11 +106,25 @@ Napi::Value IsEngineRunning(const Napi::CallbackInfo &info) {
   return Napi::Boolean::New(info.Env(), g_engine.IsRunning());
 }
 
+Napi::Value SetDeviceVolume(const Napi::CallbackInfo &info) {
+  Napi::Env env = info.Env();
+  if (info.Length() < 2 || !info[0].IsString() || !info[1].IsNumber()) {
+    return env.Undefined();
+  }
+
+  std::wstring deviceId = Utf8ToWide(info[0].As<Napi::String>().Utf8Value());
+  float volume = info[1].As<Napi::Number>().FloatValue();
+
+  g_engine.SetDeviceVolume(deviceId, volume);
+  return env.Undefined();
+}
+
 Napi::Object Init(Napi::Env env, Napi::Object exports) {
   exports.Set("getOutputDevices", Napi::Function::New(env, GetOutputDevices));
   exports.Set("start", Napi::Function::New(env, StartEngine));
   exports.Set("stop", Napi::Function::New(env, StopEngine));
   exports.Set("isRunning", Napi::Function::New(env, IsEngineRunning));
+  exports.Set("setVolume", Napi::Function::New(env, SetDeviceVolume));
   return exports;
 }
 
