@@ -12,8 +12,8 @@
 
 Grab the latest Windows build directly from **[GitHub Releases](https://github.com/madhuravel-cloud/aura-pulse/releases/latest)**:
 
-* **[Aura Pulse Setup 1.0.0.exe](https://github.com/madhuravel-cloud/aura-pulse/releases/download/v1.0.0/Aura.Pulse.Setup.1.0.0.exe)** — Full Windows installer (creates Desktop & Start Menu shortcuts)
-* **[Aura Pulse 1.0.0.exe](https://github.com/madhuravel-cloud/aura-pulse/releases/download/v1.0.0/Aura.Pulse.1.0.0.exe)** — Standalone portable executable (run directly with no installation)
+* **[Aura Pulse Setup 1.1.0.exe](https://github.com/madhuravel-cloud/aura-pulse/releases/download/v1.1.0/Aura.Pulse.Setup.1.1.0.exe)** — Full Windows installer (creates Desktop & Start Menu shortcuts)
+* **[Aura Pulse 1.1.0.exe](https://github.com/madhuravel-cloud/aura-pulse/releases/download/v1.1.0/Aura.Pulse.1.1.0.exe)** — Standalone portable executable (run directly with no installation)
 
 > **Note:** Windows SmartScreen may show an *"Unknown Publisher"* prompt on first launch since the binary is self-packaged. Click **More info → Run anyway** to launch.
 
