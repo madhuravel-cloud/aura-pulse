@@ -1,7 +1,10 @@
+#ifndef NOMINMAX
+#define NOMINMAX
+#endif
+
 #include "AudioRenderer.h"
 #include "BufferTransfer.h"
 #include <algorithm>
-#include <cstdint>
 #include <cstring>
 #include <iostream>
 #include <mmreg.h>
@@ -62,6 +65,12 @@ bool AudioRenderer::Initialize(IMMDevice *pDevice,
     return false;
   }
 
+  // Pre-allocate 1 second circular delay line (aligned to nBlockAlign)
+  size_t oneSecBytes =
+      static_cast<size_t>(pwfx->nSamplesPerSec) * pwfx->nBlockAlign;
+  delayBuffer_.assign(oneSecBytes, 0);
+  delayWritePos_ = 0;
+
   return true;
 }
 
@@ -98,7 +107,39 @@ bool AudioRenderer::RenderFromBuffer(RingBuffer &ringBuffer) {
   size_t bytesNeeded = availableFrames * pwfx->nBlockAlign;
   TransferToDest(ringBuffer, dest, bytesNeeded);
 
-  // Apply per-device volume gain
+  // 1. Apply Lip-Sync Circular Delay Line
+  const size_t cap = delayBuffer_.size();
+  if (cap > 0 && bytesNeeded <= cap) {
+    // Write incoming chunk into rolling history buffer
+    size_t firstPart = (std::min)(bytesNeeded, cap - delayWritePos_);
+    std::memcpy(delayBuffer_.data() + delayWritePos_, dest, firstPart);
+    if (firstPart < bytesNeeded) {
+      std::memcpy(delayBuffer_.data(), dest + firstPart,
+                  bytesNeeded - firstPart);
+    }
+
+    uint32_t targetMs = delayMs_.load(std::memory_order_relaxed);
+    if (targetMs > 0) {
+      size_t delayFrames =
+          (static_cast<size_t>(pwfx->nSamplesPerSec) * targetMs) / 1000;
+      size_t delayBytes = delayFrames * pwfx->nBlockAlign;
+      if (delayBytes + bytesNeeded > cap) {
+        delayBytes = cap - bytesNeeded;
+      }
+
+      size_t readPos = (delayWritePos_ + cap - delayBytes) % cap;
+      size_t readFirst = (std::min)(bytesNeeded, cap - readPos);
+      std::memcpy(dest, delayBuffer_.data() + readPos, readFirst);
+      if (readFirst < bytesNeeded) {
+        std::memcpy(dest + readFirst, delayBuffer_.data(),
+                    bytesNeeded - readFirst);
+      }
+    }
+
+    delayWritePos_ = (delayWritePos_ + bytesNeeded) % cap;
+  }
+
+  // 2. Apply Per-Device Volume Gain
   const float vol = volume_.load(std::memory_order_relaxed);
   if (vol != 1.0f) {
     if (vol == 0.0f) {

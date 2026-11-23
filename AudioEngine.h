@@ -3,6 +3,8 @@
 #include "RingBuffer.h"
 #include "wasapi.h"
 #include <atomic>
+#include <cstdint>
+#include <functional>
 #include <memory>
 #include <mmdeviceapi.h>
 #include <mutex>
@@ -39,6 +41,8 @@ private:
     ~OutputStream();
   };
 
+  class DeviceNotificationClient;
+
   std::atomic<bool> isRunning{false};
   IMMDevice *pCaptureDevice = nullptr;
   WAVEFORMATEX *captureFormat = nullptr;
@@ -47,30 +51,31 @@ private:
   std::vector<std::unique_ptr<OutputStream>> outputs;
   std::thread captureThread;
 
-  std::mutex volumeMutex;
+  std::mutex settingsMutex;
   std::unordered_map<std::wstring, float> deviceVolumes;
+  std::unordered_map<std::wstring, uint32_t> deviceDelaysMs;
+
+  std::mutex callbackMutex;
+  std::function<void()> onDevicesChangedCallback;
+  IMMDeviceEnumerator *pNotifyEnumerator = nullptr;
+  DeviceNotificationClient *pNotifyClient = nullptr;
 
   IMMDevice *FindDeviceById(IMMDeviceEnumerator *pEnumerator,
                             const std::wstring &targetId);
+  void NotifyDevicesChanged();
 
 public:
-  AudioEngine() = default;
+  AudioEngine();
   ~AudioEngine();
 
-  // Lists all active playback endpoints and flags the current Windows default
   std::vector<AudioDeviceInfo> GetOutputDevices();
-
-  // Starts loopback capture and spawns dedicated render threads for each target
-  // device ID
   std::vector<StreamStatus>
   Start(const std::vector<std::wstring> &targetDeviceIds);
-
-  // Stops all capture/render threads and releases WASAPI resources cleanly
   void Stop();
 
-  // Updates volume (0.0f to 1.5f) for a specific device before or during
-  // streaming
   void SetDeviceVolume(const std::wstring &deviceId, float volume);
+  void SetDeviceDelay(const std::wstring &deviceId, uint32_t delayMs);
+  void SetDevicesChangedCallback(std::function<void()> callback);
 
   bool IsRunning() const { return isRunning.load(); }
 };

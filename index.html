@@ -146,7 +146,7 @@
       position: relative;
       z-index: 2;
       width: 100%;
-      max-width: 720px;
+      max-width: 780px;
       display: none;
       flex-direction: column;
       gap: 18px;
@@ -613,12 +613,12 @@
       background: var(--glass-bg);
       border: 1px solid var(--glass-border);
       border-radius: 15px;
-      padding: 15px 18px;
+      padding: 14px 16px;
       backdrop-filter: blur(18px);
       display: flex;
       align-items: center;
       justify-content: space-between;
-      gap: 14px;
+      gap: 12px;
       cursor: pointer;
       overflow: hidden;
       transition: transform 0.2s ease, border-color 0.25s ease, box-shadow 0.25s ease, background 0.25s ease;
@@ -663,7 +663,7 @@
       z-index: 1;
       display: flex;
       align-items: center;
-      gap: 14px;
+      gap: 12px;
       min-width: 0;
       flex: 1;
     }
@@ -708,7 +708,7 @@
     }
 
     .device-name {
-      font-size: 14.5px;
+      font-size: 14px;
       font-weight: 600;
       color: #ffffff;
       white-space: nowrap;
@@ -717,7 +717,7 @@
     }
 
     .device-meta {
-      font-size: 12px;
+      font-size: 11.5px;
       color: var(--text-secondary);
       margin-top: 2px;
       white-space: nowrap;
@@ -725,29 +725,84 @@
       text-overflow: ellipsis;
     }
 
-    /* Per-Device Volume Button & Slider */
+    /* Per-Device Sync Delay + Volume Controls */
     .device-controls {
       position: relative;
       z-index: 2;
       display: flex;
       align-items: center;
-      gap: 10px;
+      gap: 8px;
       flex-shrink: 0;
+    }
+
+    .delay-pill {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      background: rgba(8, 10, 20, 0.58);
+      border: 1px solid rgba(255, 255, 255, 0.11);
+      padding: 6px 9px;
+      border-radius: 999px;
+    }
+
+    .delay-tag {
+      font-size: 9.5px;
+      font-weight: 700;
+      letter-spacing: 0.5px;
+      text-transform: uppercase;
+      color: #93c5fd;
+    }
+
+    .delay-slider {
+      -webkit-appearance: none;
+      appearance: none;
+      width: 54px;
+      height: 4px;
+      border-radius: 999px;
+      background: rgba(255, 255, 255, 0.22);
+      outline: none;
+      cursor: pointer;
+    }
+
+    .delay-slider::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      appearance: none;
+      width: 12px;
+      height: 12px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, #22d3ee, #818cf8);
+      border: 1.5px solid #ffffff;
+      box-shadow: 0 0 8px rgba(34, 211, 238, 0.7);
+      cursor: pointer;
+      transition: transform 0.15s ease;
+    }
+
+    .delay-slider::-webkit-slider-thumb:hover {
+      transform: scale(1.18);
+    }
+
+    .delay-val {
+      font-size: 10.5px;
+      font-weight: 700;
+      color: #cbd5e1;
+      min-width: 36px;
+      text-align: right;
+      font-variant-numeric: tabular-nums;
     }
 
     .vol-slider-wrap {
       display: flex;
       align-items: center;
-      gap: 7px;
+      gap: 6px;
       background: rgba(8, 10, 20, 0.58);
       border: 1px solid rgba(255, 255, 255, 0.11);
-      padding: 4px 10px 4px 5px;
+      padding: 4px 9px 4px 4px;
       border-radius: 999px;
     }
 
     .vol-btn {
-      width: 28px;
-      height: 28px;
+      width: 26px;
+      height: 26px;
       border-radius: 50%;
       background: rgba(255, 255, 255, 0.08);
       border: 1px solid rgba(255, 255, 255, 0.16);
@@ -775,7 +830,7 @@
     .vol-slider {
       -webkit-appearance: none;
       appearance: none;
-      width: 72px;
+      width: 62px;
       height: 4px;
       border-radius: 999px;
       background: rgba(255, 255, 255, 0.22);
@@ -786,8 +841,8 @@
     .vol-slider::-webkit-slider-thumb {
       -webkit-appearance: none;
       appearance: none;
-      width: 13px;
-      height: 13px;
+      width: 12px;
+      height: 12px;
       border-radius: 50%;
       background: linear-gradient(135deg, #38bdf8, #c084fc);
       border: 1.5px solid #ffffff;
@@ -801,10 +856,10 @@
     }
 
     .vol-pct {
-      font-size: 11px;
+      font-size: 10.5px;
       font-weight: 700;
       color: #cbd5e1;
-      min-width: 32px;
+      min-width: 30px;
       text-align: right;
       font-variant-numeric: tabular-nums;
     }
@@ -1106,7 +1161,7 @@
     </div>
   </section>
 
-  <!-- ==================== DEVELOPER MODAL ==================== -->
+  <!-- ==================== DEVELOPER MODAL ================= -->
   <div class="modal-backdrop" id="devModal">
     <div class="modal-window">
       <div class="modal-top">
@@ -1167,13 +1222,14 @@
       const refreshBtn = document.getElementById('refreshBtn');
       const statusText = document.getElementById('statusText');
 
-      const ICON_UNMUTED = `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon><path d="M15.54 8.46a5 5 0 0 1 0 7.07"></path><path d="M19.07 4.93a10 10 0 0 1 0 14.14"></path></svg>`;
-      const ICON_MUTED = `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon><line x1="23" y1="9" x2="17" y2="15"></line><line x1="17" y1="9" x2="23" y2="15"></line></svg>`;
+      const ICON_UNMUTED = `<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon><path d="M15.54 8.46a5 5 0 0 1 0 7.07"></path><path d="M19.07 4.93a10 10 0 0 1 0 14.14"></path></svg>`;
+      const ICON_MUTED = `<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon><line x1="23" y1="9" x2="17" y2="15"></line><line x1="17" y1="9" x2="23" y2="15"></line></svg>`;
 
       let allDevices = [];
       let selectedIds = new Set();
       let streamStatuses = new Map();
       let deviceVolumes = new Map(); // id -> { vol: 0..100, muted: false, prevVol: 100 }
+      let deviceDelays = new Map();  // id -> 0..300 ms
       let running = false;
 
       // Cursor-tracking spotlight for info cards
@@ -1254,6 +1310,7 @@
           const vState = deviceVolumes.get(dev.id);
           const effectiveVol = vState.muted ? 0 : vState.vol;
           const isMutedVisual = vState.muted || effectiveVol === 0;
+          const delayMs = deviceDelays.get(dev.id) ?? 0;
 
           const card = document.createElement('div');
           card.className = `device-card ${isChecked ? 'selected' : ''} ${running ? 'locked' : ''}`;
@@ -1279,6 +1336,11 @@
               </div>
             </div>
             <div class="device-controls">
+              <div class="delay-pill" title="Lip-sync audio delay offset (increase on wired/USB headset to match Bluetooth latency)">
+                <span class="delay-tag">Sync</span>
+                <input type="range" class="delay-slider" min="0" max="300" step="5" value="${delayMs}" />
+                <span class="delay-val">${delayMs}ms</span>
+              </div>
               <div class="vol-slider-wrap">
                 <button type="button" class="vol-btn ${isMutedVisual ? 'muted' : ''}" title="${isMutedVisual ? 'Unmute' : 'Mute'}">
                   ${isMutedVisual ? ICON_MUTED : ICON_UNMUTED}
@@ -1297,11 +1359,20 @@
           });
 
           const controlsEl = card.querySelector('.device-controls');
+          const delaySlider = card.querySelector('.delay-slider');
+          const delayVal = card.querySelector('.delay-val');
           const volBtn = card.querySelector('.vol-btn');
           const volSlider = card.querySelector('.vol-slider');
           const volPct = card.querySelector('.vol-pct');
 
           controlsEl.addEventListener('click', (e) => e.stopPropagation());
+
+          delaySlider.addEventListener('input', (e) => {
+            const ms = Number(e.target.value);
+            deviceDelays.set(dev.id, ms);
+            delayVal.textContent = `${ms}ms`;
+            window.auraAPI?.setDelay(dev.id, ms);
+          });
 
           volBtn.addEventListener('click', () => {
             if (!vState.muted && vState.vol > 0) {
@@ -1376,7 +1447,28 @@
           statusText.textContent = `Engine error: ${err.message}`;
         }
       });
+      // Auto-refresh on Windows audio device plug/unplug/default changes
+      let deviceRefreshTimer = null;
+      window.auraAPI?.onDevicesChanged(async () => {
+        clearTimeout(deviceRefreshTimer);
+        deviceRefreshTimer = setTimeout(async () => {
+          const stillRunning = await window.auraAPI.isRunning();
+          if (running && !stillRunning) {
+            running = false;
+            streamStatuses.clear();
+            statusText.textContent = 'Active output disconnected — streaming stopped.';
+          }
+          await loadDevices();
+        }, 250);
+      });
 
+      // Sync UI if stopped from the Windows System Tray menu
+      window.auraAPI?.onTrayStop(() => {
+        running = false;
+        streamStatuses.clear();
+        statusText.textContent = 'Streaming stopped from system tray.';
+        renderDevices();
+      });
       refreshBtn.addEventListener('click', loadDevices);
     });
   </script>
